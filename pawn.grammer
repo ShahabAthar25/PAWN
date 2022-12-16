@@ -1,0 +1,16 @@
+-- GRAMMER TEXT FORM --
+
+Expr    :	(Term) ADD|SUB	(TERM) | (Term)
+
+Term    :	(Number) MUL|DUV (Number) | (Number)
+
+Number  :	INT|FLOAT
+        :   PLUS|MINUS  (Number)
+        :   LPAREN (Expr) RPAREN
+
+-- Process For Parsing Arithematics --
+
+1 * 1 + 1   // Simple Expr
+(1 * 1 + 1) // Expr Found
+((1 * 1) + (1)) // Seperated by TERM
+(((1) * (1)) + (1)) // Term is then sperated by NUMBER
