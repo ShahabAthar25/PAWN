@@ -21,9 +21,10 @@ if not dev:
             text = input(">>>")
 
             lexer = Lexer(text, "<stdin>")
-            tokens = lexer.make_tokens()
+            tokens, error = lexer.make_tokens()
 
-            print(tokens)
+            if error: print(error.as_string())
+            else: print(tokens)
     except KeyboardInterrupt:
         print(f"\nSession ended on {get_current_date()}")
         exit()

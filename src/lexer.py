@@ -1,6 +1,8 @@
+from errors.syntax import IllegalCharError
 from tokens import *
 
 DIGITS = '1234567890'
+WHITESPACES = ' \t'
 
 class Lexer:
     def __init__(self, text, filename):
@@ -19,10 +21,34 @@ class Lexer:
         tokens = []
 
         while self.current_char != None:
-            if self.current_char in DIGITS:
+            if self.current_char in WHITESPACES:
+                self.advance()
+            elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
+            elif self.current_char == "+":
+                tokens.append(Token(TT_ADD))
+                self.advance()
+            elif self.current_char == "-":
+                tokens.append(Token(TT_SUB))
+                self.advance()
+            elif self.current_char == "*":
+                tokens.append(Token(TT_MUL))
+                self.advance()
+            elif self.current_char == "/":
+                tokens.append(Token(TT_DIV))
+                self.advance()
+            elif self.current_char == "(":
+                tokens.append(Token(TT_LPAREN))
+                self.advance()
+            elif self.current_char == ")":
+                tokens.append(Token(TT_RPAREN))
+                self.advance()
+            else:
+                char = self.current_char
+                self.advance()
+                return [], IllegalCharError(f"'{char}'")
 
-        return tokens
+        return tokens, None
 
     def make_number(self):
         num_str = ''
@@ -30,12 +56,10 @@ class Lexer:
 
         while self.current_char != None and self.current_char in DIGITS + ".":
             if self.current_char == ".":
-                if dot_count < 1: break
+                if dot_count > 1: break
                 dot_count += 1
             num_str += self.current_char
             self.advance()
-
-        print(num_str)
 
         if dot_count != 1:
             return Token(TT_INT, int(num_str))
