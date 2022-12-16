@@ -22,12 +22,31 @@ class Parser:
         # getting current token to return after advancing to next token
         tok = self.current_tok
 
+        # checking if token type is add or sub
+        if tok.type in (TT_ADD, TT_SUB):
+            self.advance()
+            # getting right node of unary op
+            right_node = self.factor()
+            # returning uninary op
+            return UninaryOpNode(tok, right_node)
+
         # checking if tok type is int or float
-        if tok.type in (TT_INT, TT_FLOAT):
+        elif tok.type in (TT_INT, TT_FLOAT):
             # advancing since we found a int or float number
             self.advance()
             # returning number node
             return NumberNode(tok)
+
+        # checking if tok type is Left Parenthesis
+        elif tok.type == TT_LPAREN:
+            self.advance()
+            expr = self.atom()
+            if self.current_tok.type == TT_RPAREN:
+                self.advance()
+                # returning expr
+                return expr
+            else:
+                print("error")
     
     def electron(self):
         return self.bin_op(self.factor, TT_DIV)

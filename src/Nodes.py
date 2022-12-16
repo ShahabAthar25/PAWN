@@ -5,6 +5,14 @@ class NumberNode:
     def __repr__(self):
         return f'({self.tok})'
 
+class UninaryOpNode:
+    def __init__(self, op, tok):
+        self.op = op
+        self.tok = tok
+
+    def __repr__(self):
+        return f'({self.op}, {self.tok})'
+
 class BinOpNode:
     def __init__(self, left_node, op, right_node):
         self.left_node = left_node
