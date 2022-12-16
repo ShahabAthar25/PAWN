@@ -1,12 +1,13 @@
 -- GRAMMER TEXT FORM --
 
-Expr    :	(Term) ADD|SUB	(TERM) | (Term)
+Atom    	:	(Neutron) SUB	(Neutron)	||	(Neutron)
+Neutron    	:	(Proton) ADD (Proton)	||	(Proton)
+Proton    	:	(Electron) MUL (Electron)	||	(Electron)
+Electron    :	(Factor) DIV (Factor)	||	(Factor)
 
-Term    :	(Number) MUL|DUV (Number) | (Number)
-
-Number  :	INT|FLOAT
-        :   PLUS|MINUS  (Number)
-        :   LPAREN (Expr) RPAREN
+Factor  	:	INT|FLOAT
+        	:	PLUS|MINUS  (Number)
+        	:	LPAREN (Expr) RPAREN
 
 -- Process For Parsing Arithematics --
 

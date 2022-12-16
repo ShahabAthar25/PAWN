@@ -1,7 +1,9 @@
+from lexer import Lexer
+from parserPawn import Parser
+
 import datetime
 import platform
 import sys
-from lexer import Lexer
 
 dev = False
 
@@ -18,13 +20,17 @@ if not dev:
     print(f"Type 'help()' for help")
     try:
         while True:
-            text = input(">>>")
+            text = input(">>> ")
 
             lexer = Lexer(text, "<stdin>")
             tokens, error = lexer.make_tokens()
 
             if error: print(error.as_string())
-            else: print(tokens)
+            
+            parser = Parser(tokens)
+            ast = parser.atom()
+
+            print(ast)
     except KeyboardInterrupt:
         print(f"\nSession ended on {get_current_date()}")
         exit()
