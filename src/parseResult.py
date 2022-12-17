@@ -6,7 +6,6 @@ class ParseResult:
 	def register(self, res):
 		if isinstance(res, ParseResult):
 			if res.error: self.error = res.error
-			if res.node: self.node = res.node
 			return res.node
 
 		return res

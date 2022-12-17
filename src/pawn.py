@@ -12,7 +12,7 @@ def pawn(text):
     if error: return None, error
     
     parser = Parser(tokens)
-    ast = parser.parse()
+    ast = parser.term()
 
     return ast.node, ast.error
 
@@ -24,7 +24,7 @@ try:
 except IndexError:
     filename = None
 
-dev = False
+dev = True
 
 if not dev:
     print(f"PAWN 0.0.1 (main, ALPHA) on {platform.system()} {platform.release()}, shell session started at {get_current_date()}")
@@ -41,7 +41,7 @@ if not dev:
         print(f"\nSession ended on {get_current_date()}")
         exit()
 else:
-    text = "2--2^2+8"
+    text = "1/1"
 
     print("Warning: Debug mode is on!!!")
     print(f"Running statement {text}\n\n")

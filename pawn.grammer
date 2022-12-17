@@ -1,24 +1,17 @@
--- GRAMMER TEXT FORM --
+expr: term (PLUS|MINUS) term
+       | UNARY term
+term: factor (MULTIPLY|DIVIDE|MODULUS) factor
+       | factor '^' factor
+       | UNARY factor
+factor: NUMBER | VARIABLE | '(' expr ')'
+       | UNARY factor
 
-Atom    	:	(Neutron) SUB (Neutron)	||	(Neutron)
-
-Neutron    	:	(Proton) ADD (Proton)	||	(Proton)
-
-Proton    	:	(Electron) MUL (Electron)	||	(Electron)
-
-Electron    :	(Factor) DIV (Factor)	||	(Photon)
-
-Quark  		:	PLUS|MINUS (Photon) || (Photon)
-
-Power		:	(Factor) POW (Quark) || (Factor)
-
-Factor    	:	INT|FLOAT
-        	:	LPAREN (Atom) RPAREN
-			:	Quark
-
--- Process For Parsing Arithematics --
-
-1 * 1 + 1   // Simple Expr
-(1 * 1 + 1) // Expr Found
-((1 * 1) + (1)) // Seperated by TERM
-(((1) * (1)) + (1)) // Term is then sperated by NUMBER
+NUMBER: [0-9]+(\.[0-9]+)?
+VARIABLE: [a-zA-Z]+
+PLUS: '+'
+MINUS: '-'
+MULTIPLY: '*'
+DIVIDE: '/'
+MODULUS: '%'
+POWER: '^'
+UNARY: ('+'|'-')
