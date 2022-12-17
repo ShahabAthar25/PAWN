@@ -1,4 +1,5 @@
 from errors.syntax import IllegalCharError
+from position import Position
 from tokens import *
 
 DIGITS = '1234567890'
@@ -8,14 +9,14 @@ class Lexer:
     def __init__(self, text, filename):
         self.text = text
         self.filename = filename
-        self.pos = -1
+        self.pos = Position(-1, -1, 0, filename, text)
         self.current_char = None
 
         self.advance()
 
     def advance(self):
-        self.pos += 1
-        self.current_char = self.text[self.pos] if self.pos < len(self.text) else None
+        self.pos.advance(self.current_char)
+        self.current_char = self.text[self.pos.pos] if self.pos.pos < len(self.text) else None
 
     def make_tokens(self):
         tokens = []
@@ -26,27 +27,33 @@ class Lexer:
             elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
             elif self.current_char == "+":
-                tokens.append(Token(TT_ADD))
+                tokens.append(Token(TT_ADD, pos_start=self.pos))
                 self.advance()
             elif self.current_char == "-":
-                tokens.append(Token(TT_SUB))
+                tokens.append(Token(TT_SUB, pos_start=self.pos))
                 self.advance()
             elif self.current_char == "*":
-                tokens.append(Token(TT_MUL))
+                tokens.append(Token(TT_MUL, pos_start=self.pos))
                 self.advance()
             elif self.current_char == "/":
-                tokens.append(Token(TT_DIV))
+                tokens.append(Token(TT_DIV, pos_start=self.pos))
+                self.advance()
+            elif self.current_char == "^":
+                tokens.append(Token(TT_POW, pos_start=self.pos))
                 self.advance()
             elif self.current_char == "(":
-                tokens.append(Token(TT_LPAREN))
+                tokens.append(Token(TT_LPAREN, pos_start=self.pos))
                 self.advance()
             elif self.current_char == ")":
-                tokens.append(Token(TT_RPAREN))
+                tokens.append(Token(TT_RPAREN, pos_start=self.pos))
                 self.advance()
             else:
+                pos_start = self.pos.copy()
                 char = self.current_char
                 self.advance()
-                return [], IllegalCharError(f"'{char}'")
+                return [], IllegalCharError(f"'{char}'", pos_start, self.pos.copy())
+
+        tokens.append(Token(TT_EOF, pos_start=self.pos))
 
         return tokens, None
 
@@ -62,6 +69,6 @@ class Lexer:
             self.advance()
 
         if dot_count != 1:
-            return Token(TT_INT, int(num_str))
+            return Token(TT_INT, int(num_str), pos_start=self.pos)
         else:
-            return Token(TT_FLOAT, float(num_str))
+            return Token(TT_FLOAT, float(num_str), pos_start=self.pos)

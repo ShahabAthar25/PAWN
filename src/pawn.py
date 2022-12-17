@@ -5,7 +5,16 @@ import datetime
 import platform
 import sys
 
-dev = False
+def pawn(text):
+    lexer = Lexer(text, "<stdin>")
+    tokens, error = lexer.make_tokens()
+
+    if error: return None, error
+    
+    parser = Parser(tokens)
+    ast = parser.parse()
+
+    return ast.node, ast.error
 
 def get_current_date():
     return datetime.date.today().strftime("%B %d, %Y") + " " + datetime.datetime.now().strftime("%H:%M:%S")
@@ -15,6 +24,8 @@ try:
 except IndexError:
     filename = None
 
+dev = False
+
 if not dev:
     print(f"PAWN 0.0.1 (main, ALPHA) on {platform.system()} {platform.release()}, shell session started at {get_current_date()}")
     print(f"Type 'help()' for help")
@@ -22,15 +33,20 @@ if not dev:
         while True:
             text = input(">>> ")
 
-            lexer = Lexer(text, "<stdin>")
-            tokens, error = lexer.make_tokens()
+            result, error = pawn(text)
 
             if error: print(error.as_string())
-            
-            parser = Parser(tokens)
-            ast = parser.atom()
-
-            print(ast)
+            else: print(result)
     except KeyboardInterrupt:
         print(f"\nSession ended on {get_current_date()}")
         exit()
+else:
+    text = "2--2^2+8"
+
+    print("Warning: Debug mode is on!!!")
+    print(f"Running statement {text}\n\n")
+
+    result, error = pawn(text)
+
+    if error: print(error.as_string())
+    else: print(result)

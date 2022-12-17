@@ -1,13 +1,20 @@
 -- GRAMMER TEXT FORM --
 
-Atom    	:	(Neutron) SUB	(Neutron)	||	(Neutron)
-Neutron    	:	(Proton) ADD (Proton)	||	(Proton)
-Proton    	:	(Electron) MUL (Electron)	||	(Electron)
-Electron    :	(Factor) DIV (Factor)	||	(Factor)
+Atom    	:	(Neutron) SUB (Neutron)	||	(Neutron)
 
-Factor  	:	INT|FLOAT
-        	:	PLUS|MINUS  (Number)
-        	:	LPAREN (Expr) RPAREN
+Neutron    	:	(Proton) ADD (Proton)	||	(Proton)
+
+Proton    	:	(Electron) MUL (Electron)	||	(Electron)
+
+Electron    :	(Factor) DIV (Factor)	||	(Photon)
+
+Quark  		:	PLUS|MINUS (Photon) || (Photon)
+
+Power		:	(Factor) POW (Quark) || (Factor)
+
+Factor    	:	INT|FLOAT
+        	:	LPAREN (Atom) RPAREN
+			:	Quark
 
 -- Process For Parsing Arithematics --
 
