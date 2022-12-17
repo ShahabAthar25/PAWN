@@ -21,19 +21,54 @@ class Parser:
             self.current_tok = self.tokens[self.pos]
 
     def factor(self):
+        res = ParseResult()
         tok = self.current_tok
 
-        if tok in (TT_INT, TT_FLOAT):
-            self.advance()
-            return NumberNode(tok)
+        if tok.type in (TT_INT, TT_FLOAT):
+            res.register(self.advance())
+            return res.success(NumberNode(tok))
+
+        elif tok.type in (TT_ADD, TT_SUB):
+            res.register(self.advance())
+            right_node = self.factor()
+            return res.success(UninaryOpNode(tok, right_node))
+
+        elif tok.type == TT_LPAREN:
+            res.register(self.advance())
+            expr = res.register(self.expr())
+            if self.current_tok.type == TT_RPAREN:
+                res.register(self.advance())
+                return res.success(expr)
+            else:
+                return res.failure(InvalidSyntaxError(
+                    "Expected ')'",
+                    tok.pos_start, self.current_tok.pos_end
+                ))
+
+        return res.failure(InvalidSyntaxError(
+            "Expected a int or float",
+            tok.pos_start, tok.pos_end
+        ))
+    def power(self):
+        return self.bin_op(self.factor, (TT_POW, ))
 
     def term(self):
-        left_factor = self.factor()
+        return self.bin_op(self.power, (TT_MUL, TT_DIV, TT_MOD))
 
-        while self.current_tok.type in (TT_POW, TT_MUL, TT_DIV, TT_MOD):
+    def expr(self):
+        return self.bin_op(self.term, (TT_ADD, TT_SUB))
+
+    def bin_op(self, func, operands):
+        res = ParseResult()
+
+        left_factor = res.register(func())
+        if res.error: return res
+
+        while self.current_tok.type in operands:
             op = self.current_tok
             self.advance()
-            right_factor = self.factor()
+            right_factor = res.register(func())
+            if res.error: return res
             left_factor = BinOpNode(left_factor, op, right_factor)
 
-        return left_factor
+        return res.success(left_factor)

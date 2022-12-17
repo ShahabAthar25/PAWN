@@ -1,7 +1,7 @@
-expr: term (PLUS|MINUS) term
+expr: term (PLUS|MINUS) expr
        | UNARY term
-term: factor (MULTIPLY|DIVIDE|MODULUS) factor
-       | factor '^' factor
+term: factor (MULTIPLY|DIVIDE|MODULUS) term
+       | factor POWER term
        | UNARY factor
 factor: NUMBER | VARIABLE | '(' expr ')'
        | UNARY factor

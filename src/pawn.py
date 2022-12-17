@@ -12,9 +12,9 @@ def pawn(text):
     if error: return None, error
     
     parser = Parser(tokens)
-    ast = parser.term()
+    ast = parser.expr()
 
-    return ast.node, ast.error
+    return ast, ast.error
 
 def get_current_date():
     return datetime.date.today().strftime("%B %d, %Y") + " " + datetime.datetime.now().strftime("%H:%M:%S")
@@ -24,7 +24,20 @@ try:
 except IndexError:
     filename = None
 
-dev = True
+ask_debug = True
+dev = False
+
+if ask_debug:
+    while True:
+        debug = input("Do you want to begin this session as a debug session [y/n] ")
+        if debug == "y":
+            dev = True
+            break
+        elif debug == "n":
+            dev = False
+            break
+        else:
+            print(f"The expected input was not y or n please try again.")
 
 if not dev:
     print(f"PAWN 0.0.1 (main, ALPHA) on {platform.system()} {platform.release()}, shell session started at {get_current_date()}")
@@ -41,12 +54,14 @@ if not dev:
         print(f"\nSession ended on {get_current_date()}")
         exit()
 else:
-    text = "1/1"
+    text = ["1*1", "1*1", "1%1", "1^1", "1*1/1", "1/1*1", "1^1/1*2"]
 
     print("Warning: Debug mode is on!!!")
-    print(f"Running statement {text}\n\n")
+    for i in range(len(text)):
+        print(f"Running statement '{text[i]}'\n")
 
-    result, error = pawn(text)
+        result, error = pawn(text[i])
 
-    if error: print(error.as_string())
-    else: print(result)
+        if error: print(error.as_string())
+        else: print(result)
+        print("--------------------------\n")
