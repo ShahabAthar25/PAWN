@@ -53,7 +53,7 @@ class Parser:
         ))
 
     def power(self):
-        return self.bin_op(self.factor, (TT_POW, ), self.term)
+        return self.bin_op(self.factor, (TT_POW, ), self.factor)
 
     def term(self):
         return self.bin_op(self.power, (TT_MUL, TT_DIV, TT_MOD))
