@@ -13,6 +13,14 @@ class UnaryOpNode:
     def __repr__(self):
         return f'({self.op}, {self.tok})'
 
+class ExponentialNode:
+    def __init__(self, left_node, right_node):
+        self.left_node = left_node
+        self.right_node = right_node
+
+    def __repr__(self):
+        return f'({self.left_node}, {self.right_node})'
+
 class BinOpNode:
     def __init__(self, left_node, op, right_node):
         self.left_node = left_node

@@ -18,7 +18,9 @@ class Parser:
         if self.pos < len(self.tokens):
             self.current_tok = self.tokens[self.pos]
 
-    def atom(self):
+        return self
+
+    def factor(self):
         res = ParseResult()
         tok = self.current_tok
 
@@ -30,39 +32,31 @@ class Parser:
             res.register(self.advance())
             expr = res.register(self.expr())
             if res.error: return res
+            print(expr, self.current_tok)
 
             if self.current_tok.type == TT_RPAREN:
-                self.advance()
-                return expr
+                res.register(self.advance())
+                return res.success(expr)
             else:
                 return res.failure(InvalidSyntaxError(
-                    "Expected a ')'",
+                    "Expected ')'",
                     self.current_tok.pos_start, self.current_tok.pos_end
                 ))
 
+        elif tok.type == TT_UNARY_FACTOR:
+            res.register(self.advance())
+            return res.success(UnaryOpNode(tok, self.factor()))            
+
         return res.failure(InvalidSyntaxError(
-            "Expected int, flaot or a parentheses operation",
+            "Expected Float, Int or a parenthesis expression",
             self.current_tok.pos_start, self.current_tok.pos_end
         ))
 
-
     def power(self):
-        return self.bin_op(self.atom, (TT_POW, ), self.factor)
-    
-    def factor(self):
-        res = ParseResult()
-        tok = self.current_tok
-
-        if tok.type in (TT_ADD, TT_SUB):
-            op = self.current_tok
-            res.register(self.advance())
-            right = res.register(self.term())
-            return res.success(UnaryOpNode(op, right))
-        
-        return self.power()
+        return self.bin_op(self.factor, (TT_POW, ), self.term)
 
     def term(self):
-        return self.bin_op(self.factor, (TT_MUL, TT_DIV))
+        return self.bin_op(self.power, (TT_MUL, TT_DIV, TT_MOD))
 
     def expr(self):
         return self.bin_op(self.term, (TT_ADD, TT_SUB))
@@ -78,7 +72,7 @@ class Parser:
 
         while self.current_tok.type in operands:
             op = self.current_tok
-            self.advance()
+            res.register(self.advance())
             right = res.register(func_b())
             left = BinOpNode(left, op, right)
 

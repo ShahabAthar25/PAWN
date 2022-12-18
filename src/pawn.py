@@ -8,6 +8,7 @@ import sys
 def pawn(text):
     lexer = Lexer(text, "<stdin>")
     tokens, error = lexer.make_tokens()
+    print(tokens)
 
     if error: return None, error
     

@@ -11,6 +11,7 @@ class Lexer:
         self.filename = filename
         self.pos = Position(-1, -1, 0, filename, text)
         self.current_char = None
+        self.tok_idx = 0
 
         self.advance()
 
@@ -30,7 +31,18 @@ class Lexer:
                 tokens.append(Token(TT_ADD, pos_start=self.pos))
                 self.advance()
             elif self.current_char == "-":
-                tokens.append(Token(TT_SUB, pos_start=self.pos))
+                # Check if the next character is a digit
+                if self.peek() != None and self.peek() in DIGITS:
+                    try:
+                        if tokens[-1].type in (TT_INT, TT_FLOAT):
+                            tokens.append(Token(TT_ADD, pos_start=self.pos))
+                    except IndexError:
+                        pass
+                    # If it is, create a UNARY_FACTOR token
+                    tokens.append(Token(TT_UNARY_FACTOR, pos_start=self.pos))
+                else:
+                    # If it is not, create a SUB token
+                    tokens.append(Token(TT_SUB, pos_start=self.pos))
                 self.advance()
             elif self.current_char == "*":
                 tokens.append(Token(TT_MUL, pos_start=self.pos))
@@ -76,11 +88,10 @@ class Lexer:
         else:
             return Token(TT_FLOAT, float(num_str), pos_start=self.pos)
 
-    def peek(self):
-        # Get the position of the next character
-        pos = self.pos.pos + 1
-        # Try to get the character at that position
-        # If the position is out of bounds, return None
+    def peek(self, back=False):
+        if back: pos = self.pos.pos - 1
+        else: pos = self.pos.pos + 1
+
         try:
             return self.text[pos]
         except IndexError:
