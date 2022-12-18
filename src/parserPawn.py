@@ -3,13 +3,11 @@ from errors.syntax import InvalidSyntaxError
 from tokens import *
 from Nodes import *
 
-
 class Parser:
     def __init__(self, tokens):
         self.tokens = tokens
         self.pos = -1
         self.current_tok = None
-        self.power_ran = False
 
         self.advance()
 
@@ -20,55 +18,68 @@ class Parser:
         if self.pos < len(self.tokens):
             self.current_tok = self.tokens[self.pos]
 
-    def factor(self):
+    def atom(self):
         res = ParseResult()
         tok = self.current_tok
 
         if tok.type in (TT_INT, TT_FLOAT):
             res.register(self.advance())
             return res.success(NumberNode(tok))
-
-        elif tok.type in (TT_ADD, TT_SUB):
-            res.register(self.advance())
-            right_node = self.factor()
-            return res.success(UninaryOpNode(tok, right_node))
-
+        
         elif tok.type == TT_LPAREN:
             res.register(self.advance())
             expr = res.register(self.expr())
+            if res.error: return res
+
             if self.current_tok.type == TT_RPAREN:
-                res.register(self.advance())
-                return res.success(expr)
+                self.advance()
+                return expr
             else:
                 return res.failure(InvalidSyntaxError(
-                    "Expected ')'",
-                    tok.pos_start, self.current_tok.pos_end
+                    "Expected a ')'",
+                    self.current_tok.pos_start, self.current_tok.pos_end
                 ))
 
         return res.failure(InvalidSyntaxError(
-            "Expected a int or float",
-            tok.pos_start, tok.pos_end
+            "Expected int, flaot or a parentheses operation",
+            self.current_tok.pos_start, self.current_tok.pos_end
         ))
+
+
     def power(self):
-        return self.bin_op(self.factor, (TT_POW, ))
+        return self.bin_op(self.atom, (TT_POW, ), self.factor)
+    
+    def factor(self):
+        res = ParseResult()
+        tok = self.current_tok
+
+        if tok.type in (TT_ADD, TT_SUB):
+            op = self.current_tok
+            res.register(self.advance())
+            right = res.register(self.term())
+            return res.success(UnaryOpNode(op, right))
+        
+        return self.power()
 
     def term(self):
-        return self.bin_op(self.power, (TT_MUL, TT_DIV, TT_MOD))
+        return self.bin_op(self.factor, (TT_MUL, TT_DIV))
 
     def expr(self):
         return self.bin_op(self.term, (TT_ADD, TT_SUB))
 
-    def bin_op(self, func, operands):
+    def bin_op(self, func_a, operands, func_b=None):
+        if func_b == None:
+            func_b = func_a
+
         res = ParseResult()
 
-        left_factor = res.register(func())
+        left = res.register(func_a())
         if res.error: return res
 
         while self.current_tok.type in operands:
             op = self.current_tok
             self.advance()
-            right_factor = res.register(func())
-            if res.error: return res
-            left_factor = BinOpNode(left_factor, op, right_factor)
+            right = res.register(func_b())
+            left = BinOpNode(left, op, right)
 
-        return res.success(left_factor)
+        return res.success(left)

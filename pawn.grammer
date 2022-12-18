@@ -1,17 +1,11 @@
-expr: term (PLUS|MINUS) expr
-       | UNARY term
-term: factor (MULTIPLY|DIVIDE|MODULUS) term
-       | factor POWER term
-       | UNARY factor
-factor: NUMBER | VARIABLE | '(' expr ')'
-       | UNARY factor
+expr	:	term ((PLUS|MINUS) term)*
 
-NUMBER: [0-9]+(\.[0-9]+)?
-VARIABLE: [a-zA-Z]+
-PLUS: '+'
-MINUS: '-'
-MULTIPLY: '*'
-DIVIDE: '/'
-MODULUS: '%'
-POWER: '^'
-UNARY: ('+'|'-')
+term	:	factor ((MUL|DIV) factor)*
+
+factor	:	(PLUS|MINUS) power
+		:	power
+
+power	:	atom (POW factor)*
+
+atom	:	INT|FLOAT
+		:	LPAREN Expr RPAREN

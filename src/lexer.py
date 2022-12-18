@@ -75,3 +75,13 @@ class Lexer:
             return Token(TT_INT, int(num_str), pos_start=self.pos)
         else:
             return Token(TT_FLOAT, float(num_str), pos_start=self.pos)
+
+    def peek(self):
+        # Get the position of the next character
+        pos = self.pos.pos + 1
+        # Try to get the character at that position
+        # If the position is out of bounds, return None
+        try:
+            return self.text[pos]
+        except IndexError:
+            return None

@@ -5,7 +5,7 @@ class NumberNode:
     def __repr__(self):
         return f'{self.tok}'
 
-class UninaryOpNode:
+class UnaryOpNode:
     def __init__(self, op, tok):
         self.op = op
         self.tok = tok

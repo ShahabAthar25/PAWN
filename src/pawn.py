@@ -24,10 +24,10 @@ try:
 except IndexError:
     filename = None
 
-ask_debug = True
+ask_debug = False
 dev = False
 
-if ask_debug:
+if ask_debug and not dev:
     while True:
         debug = input("Do you want to begin this session as a debug session [y/n] ")
         if debug == "y":
@@ -54,7 +54,7 @@ if not dev:
         print(f"\nSession ended on {get_current_date()}")
         exit()
 else:
-    text = ["1*1", "1*1", "1%1", "1^1", "1*1/1", "1/1*1", "1^1/1*2"]
+    text = ["-2", "-2^2"]
 
     print("Warning: Debug mode is on!!!")
     for i in range(len(text)):
