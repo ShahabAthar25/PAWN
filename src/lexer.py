@@ -3,9 +3,12 @@
 from errors.syntax import IllegalCharError
 from position import Position
 from tokens import *
+import string
 
 # String of digits to use for recognizing numbers in the input text
 DIGITS = '1234567890'
+# String of letters to use for recognizing identifiers in the input text
+LETTERS = string.ascii_letters
 
 # String of whitespace characters to ignore in the input text
 WHITESPACES = ' \t'
@@ -43,6 +46,9 @@ class Lexer:
             # If the current character is a digit, create a number token
             elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
+            # If the current character is a letter, create a identifier token
+            elif self.current_char in DIGITS:
+                tokens.append(self.make_identifier())
             # If the current character is "+", create an ADD token
             elif self.current_char == "+":
                 tokens.append(Token(TT_ADD, pos_start=self.pos))
@@ -86,6 +92,12 @@ class Lexer:
             elif self.current_char == "%":
                 # Create a MOD token with the current position as the starting position
                 tokens.append(Token(TT_MOD, pos_start=self.pos))
+                # Advance to the next character
+                self.advance()
+            # If the current character is "="", create a equals token
+            elif self.current_char == "=":
+                # Create a EQUAL token with the current position as the starting position
+                tokens.append(Token(TT_EQ, pos_start=self.pos))
                 # Advance to the next character
                 self.advance()
             # If the current character is "(", create a LPAREN token
@@ -146,6 +158,17 @@ class Lexer:
         # with the value of the number string converted to an integer
         else:
             return Token(TT_INT, int(num_str), pos_start=self.pos)
+
+    def make_identifier(self):
+        id_str = ''
+        pos_start = self.pos.copy()
+
+        while self.current_char != None and self.current_char in LETTERS + DIGITS + "_-":
+            id_str += self.current_char
+            self.advance()
+        
+        tok_type = TT_KEYWORD if id_str in KEYWORDS else TT_IDENTIFIER
+        return Token(tok_type, id_str, pos_start, self.pos)
 
     def peek(self, back=False):
         # Determine the position to peek at based on the value of the back argument

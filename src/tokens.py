@@ -1,16 +1,23 @@
 # Define constants for token types
 TT_INT 			= "INT"  # Integer token
 TT_FLOAT		= "FLOAT"  # Float token
+TT_IDENTIFIER	= "IDENTIFIER"  # Identifier token
+TT_KEYWORD		= "KEYWORD"  # Keyword token
 TT_POW 			= "POW"  # Power token
 TT_DIV 			= "DIV"  # Division token
 TT_MUL 			= "MUL"  # Multiplication token
 TT_ADD 			= "ADD"  # Addition token
 TT_SUB 			= "SUB"  # Subtraction token
 TT_MOD 			= "MOD"  # Modulus token
+TT_EQ 			= "EQ"  # Modulus token
 TT_LPAREN 		= "LPAREN"  # Left parenthesis token
 TT_RPAREN 		= "RPAREN"  # Right parenthesis token
 TT_UNARY_FACTOR = "UNARY_FACTOR"  # Unary factor token
 TT_EOF 			= "EOF"  # End-of-file token
+
+KEYWORDS = [
+	"var"
+]
 
 # Define a class for tokens
 class Token:

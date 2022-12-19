@@ -22,6 +22,15 @@ class Parser:
 
         return self
 
+    def parse(self):
+        res = self.expr()
+        if not res.error and self.current_tok.type != TT_EOF:
+            return res.failure(InvalidSyntaxError(
+                "Expected '+', '-', '*', '/' or '^'",
+                self.current_tok.pos_start, self.current_tok.pos_end
+            ))
+        return res
+
     def factor(self):
         # Parse a number or parenthesized expression
         res = ParseResult()
@@ -37,7 +46,6 @@ class Parser:
             res.register(self.advance())
             expr = res.register(self.expr())
             if res.error: return res
-            print(expr, self.current_tok)
 
             if self.current_tok.type == TT_RPAREN:
                 # If the current token is a right parenthesis, return the parsed expression

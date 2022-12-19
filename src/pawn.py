@@ -22,7 +22,7 @@ def pawn(text):
     # Create a Parser instance with the resulting tokens
     parser = Parser(tokens)
     # Parse the tokens and save the resulting AST
-    ast = parser.expr()
+    ast = parser.parse()
     # If there was an error then returning the error and none as the result
     if ast.error: return None, ast.error
 
