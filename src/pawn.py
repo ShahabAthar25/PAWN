@@ -1,6 +1,7 @@
 # Import the Lexer and Parser classes from the lexer and parserPawn modules
 from lexer import Lexer
 from parserPawn import Parser
+from interpreter import Interpreter
 
 # Import the datetime, platform, and sys modules for use in various functions
 import datetime
@@ -22,9 +23,13 @@ def pawn(text):
     parser = Parser(tokens)
     # Parse the tokens and save the resulting AST
     ast = parser.expr()
+    # If there was an error then returning the error and none as the result
+    if ast.error: return None, ast.error
 
-    # Return the AST and any error that occurred during parsing
-    return ast, ast.error
+    interpreter = Interpreter()
+    result = interpreter.visit(ast.node)
+
+    return result, None
 
 # Define a function that returns the current date and time in a specific format
 def get_current_date():

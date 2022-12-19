@@ -1,7 +1,7 @@
 from parseResult import ParseResult
 from errors.syntax import InvalidSyntaxError
 from tokens import *
-from Nodes import *
+from nodes import *
 
 class Parser:
     def __init__(self, tokens):
@@ -53,7 +53,16 @@ class Parser:
         elif tok.type == TT_UNARY_FACTOR:
             # If the current token is a unary factor (e.g., "-"), parse the factor that follows it
             res.register(self.advance())
-            return res.success(UnaryOpNode(tok, self.factor()))            
+
+            # Getting the right node
+            right = res.register(self.factor())
+            # If there is an error then returning the error
+            if res.error: return res
+            # If there was no error telling parse result the operation was succesful
+            res.success(right)
+
+            # Returning the unary operator nod
+            return res.success(UnaryOpNode(tok, right))
 
         # If none of the above conditions are met, return an error
         return res.failure(InvalidSyntaxError(
