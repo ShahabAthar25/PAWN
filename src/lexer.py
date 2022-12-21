@@ -47,7 +47,7 @@ class Lexer:
             elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
             # If the current character is a letter, create a identifier token
-            elif self.current_char in DIGITS:
+            elif self.current_char in LETTERS:
                 tokens.append(self.make_identifier())
             # If the current character is "+", create an ADD token
             elif self.current_char == "+":

@@ -29,7 +29,7 @@ def pawn(text):
     interpreter = Interpreter()
     result = interpreter.visit(ast.node)
 
-    return result, None
+    return result.value, None
 
 # Define a function that returns the current date and time in a specific format
 def get_current_date():

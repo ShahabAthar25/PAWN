@@ -1,4 +1,4 @@
-from parseResult import ParseResult
+from error_handlers.parseResult import ParseResult
 from errors.syntax import InvalidSyntaxError
 from tokens import *
 from nodes import *
@@ -40,6 +40,10 @@ class Parser:
             # If the current token is an integer or float, return a NumberNode object
             res.register(self.advance())
             return res.success(NumberNode(tok))
+        
+        elif tok.type == TT_IDENTIFIER:
+            res.register(self.advance())
+            return res.success(VarAccessNode(tok))
         
         elif tok.type == TT_LPAREN:
             # If the current token is a left parenthesis, parse the expression inside the parentheses
@@ -87,6 +91,31 @@ class Parser:
         return self.bin_op(self.power, (TT_MUL, TT_DIV, TT_MOD))
 
     def expr(self):
+        res = ParseResult()
+
+        if self.current_tok.matches(TT_KEYWORD, 'let'):
+            res.register(self.advance())
+
+            if self.current_tok.type != TT_IDENTIFIER:
+                return res.failure(InvalidSyntaxError(
+                    "Expected identifier",
+                    self.current_tok.pos_start, self.current_tok.pos_end
+                ))
+            
+            var_name = self.current_tok
+            res.register(self.advance())
+
+            if self.current_tok.type != TT_EQ:
+                return res.failure(InvalidSyntaxError(
+                    "Expected '='",
+                    self.current_tok.pos_start, self.current_tok.pos_end
+                ))
+
+            res.register(self.advance())
+            expr = res.register(self.expr())
+
+            return res.success(VarAssignNode(var_name, expr))
+
         # Parse an additive expression (e.g., 2 + 3)
         return self.bin_op(self.term, (TT_ADD, TT_SUB))
 

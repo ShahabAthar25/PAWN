@@ -1,6 +1,10 @@
-expr    : term ((ADD | SUB) term)*
+expr    : KEYWORD:VAR IDENTIFIER EQ expr
+		: term ((ADD | SUB) term)*
+
 term    : factor ((MUL | DIV | MOD) factor)*
-power	: factor (POW term)*
-factor  : INT | FLOAT 
-		| LPAREN expr RPAREN
-		| UNARY_FACTOR factor
+
+power	: factor (POW factor)*
+
+factor  : INT | FLOAT | IDENTIFIER
+		: LPAREN expr RPAREN
+		: UNARY_FACTOR factor

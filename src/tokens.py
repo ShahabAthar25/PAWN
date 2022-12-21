@@ -16,7 +16,7 @@ TT_UNARY_FACTOR = "UNARY_FACTOR"  # Unary factor token
 TT_EOF 			= "EOF"  # End-of-file token
 
 KEYWORDS = [
-	"var"
+	"let"
 ]
 
 # Define a class for tokens
@@ -36,6 +36,9 @@ class Token:
 		# If an end position is provided, set it as the end position for the token
 		if pos_end:
 			self.pos_end = self.pos_end.copy()
+
+	def matches(self, _type, value):
+		return self.type == _type and self.value == value
 	
 	# Define a representation for the token
 	def __repr__(self):
