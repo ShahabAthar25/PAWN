@@ -16,6 +16,27 @@ class Interpreter:
             Number(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end)
         )
 
+    def visit_VarAccessNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        value = context.symbol_table.get(var_name)
+
+        if not value:
+            res.failure(RTResult(
+                f"'{var_name}' is not defined",
+                node.pos_start, node.pos_end, self.context
+            ))
+
+        return value
+    
+    def visit_VarAssignNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        value = res.register(self.visit(node.value_node))
+        if res.error: return res
+
+        context.symbol_table.set(var_name, value)
+
     def visit_BinOpNode(self, node, context):
         res = RTResult()
 
