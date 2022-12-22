@@ -53,22 +53,9 @@ class Lexer:
             elif self.current_char == "+":
                 tokens.append(Token(TT_ADD, pos_start=self.pos))
                 self.advance()
-            # If the current character is "-", create either a SUB or UNARY_FACTOR token
-            # depending on whether the next character is a digit
+            # If the current character is "-", create a SUB token
             elif self.current_char == "-":
-                # Check if the next character is a digit
-                if self.peek() != None and self.peek() in DIGITS:
-                    # If the previous token is a number, add an ADD token
-                    try:
-                        if tokens[-1].type in (TT_INT, TT_FLOAT):
-                            tokens.append(Token(TT_ADD, pos_start=self.pos))
-                    except IndexError:
-                        pass
-                    # If it is, create a UNARY_FACTOR token
-                    tokens.append(Token(TT_UNARY_FACTOR, pos_start=self.pos))
-                else:
-                    # If it is not, create a SUB token
-                    tokens.append(Token(TT_SUB, pos_start=self.pos))
+                tokens.append(Token(TT_SUB, pos_start=self.pos))
                 self.advance()
             # If the current character is "*", create a MUL token
             elif self.current_char == "*":
@@ -169,17 +156,3 @@ class Lexer:
         
         tok_type = TT_KEYWORD if id_str in KEYWORDS else TT_IDENTIFIER
         return Token(tok_type, id_str, pos_start, self.pos)
-
-    def peek(self, back=False):
-        # Determine the position to peek at based on the value of the back argument
-        if back:
-            pos = self.pos.pos - 1
-        else:
-            pos = self.pos.pos + 1
-
-        # Try to return the character at the specified position in the input text
-        # and return None if the position is out of bounds
-        try:
-            return self.text[pos]
-        except IndexError:
-            return None

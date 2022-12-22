@@ -2,6 +2,7 @@
 from lexer import Lexer
 from parserPawn import Parser
 from interpreter import Interpreter
+from context import Context
 
 # Import the datetime, platform, and sys modules for use in various functions
 import datetime
@@ -27,7 +28,8 @@ def pawn(text):
     if ast.error: return None, ast.error
 
     interpreter = Interpreter()
-    result = interpreter.visit(ast.node)
+    context = Context('<program>')
+    result = interpreter.visit(ast.node, context)
 
     return result.value, result.error
 

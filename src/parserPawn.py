@@ -26,7 +26,7 @@ class Parser:
         res = self.expr()
         if not res.error and self.current_tok.type != TT_EOF:
             return res.failure(InvalidSyntaxError(
-                "Expected '+', '-', '*', '/' or '^'",
+                "Expected '(', '+', '-', '*', '/' or '^'",
                 self.current_tok.pos_start, self.current_tok.pos_end
             ))
         return res
@@ -62,7 +62,7 @@ class Parser:
                     self.current_tok.pos_start, self.current_tok.pos_end
                 ))
 
-        elif tok.type == TT_UNARY_FACTOR:
+        elif tok.type in (TT_ADD, TT_SUB):
             # If the current token is a unary factor (e.g., "-"), parse the factor that follows it
             res.register(self.advance())
 
@@ -70,10 +70,8 @@ class Parser:
             right = res.register(self.factor())
             # If there is an error then returning the error
             if res.error: return res
-            # If there was no error telling parse result the operation was succesful
-            res.success(right)
 
-            # Returning the unary operator nod
+            # Returning the unary operator node
             return res.success(UnaryOpNode(tok, right))
 
         # If none of the above conditions are met, return an error
@@ -83,8 +81,8 @@ class Parser:
         ))
 
     def power(self):
-        # Parse a power expression (e.g., 2 ** 3)
-        return self.bin_op(self.factor, (TT_POW, ), self.factor)
+        # Parse a power expression (e.g., 2 ^ 3)
+        return self.bin_op(self.factor, (TT_POW, ))
 
     def term(self):
         # Parse a multiplicative expression (e.g., 2 * 3)
@@ -136,6 +134,7 @@ class Parser:
             op = self.current_tok
             res.register(self.advance())
             right = res.register(func_b())
+            if res.error: return res
             left = BinOpNode(left, op, right)
 
         # Return the left operand as the result of the function
