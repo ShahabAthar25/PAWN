@@ -125,7 +125,7 @@ class Interpreter:
             condition = res.register(self.visit(node.condition, context))
             if res.error: return res
 
-            if condition == 0: break
+            if condition.value == 0: break
 
             res.register(self.visit(node.expr, context))
             if res.error: return res
