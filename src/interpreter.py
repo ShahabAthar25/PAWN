@@ -98,3 +98,22 @@ class Interpreter:
             return res.failure(error)
         else:
             return res.success(number.set_pos(node.pos_start, node.pos_end))
+    
+    def visit_IfNode(self, node, context):
+        res = RTResult()
+
+        for condition, expr in node.cases:
+            condition_value = res.register(self.visit(condition, context))
+            if res.error: return res
+
+            if condition_value.value == 1:
+                expr_value = res.register(self.visit(expr, context))
+                if res.error: return res
+                return res.success(expr_value)
+        
+        if node.else_case:
+            expr = res.register(self.visit(node.else_case, context))
+            if res.error: return res
+            return res.success(expr)
+        
+        return res.success(None)

@@ -27,6 +27,56 @@ class Parser:
                 self.current_tok.pos_start, self.current_tok.pos_end
             ))
         return res
+    
+    def if_expr(self):
+        res = ParseResult()
+        cases = []
+        else_case = None
+
+        res.register(self.advance())
+
+        condition = res.register(self.condition())
+        if res.error: return res
+
+        if not self.current_tok.matches(TT_KEYWORD, 'then'):
+            return res.failure(InvalidSyntaxError(
+                "Expected 'then'",
+                self.current_tok.pos_start, self.current_tok.pos_end
+            ))
+
+        res.register(self.advance())
+        
+        expr = res.register(self.expr())
+        if res.error: return res
+        cases.append((condition, expr))
+
+        while self.current_tok.matches(TT_KEYWORD, "else"):
+            res.register(self.advance())
+
+            if self.current_tok.matches(TT_KEYWORD, "if"):
+                res.register(self.advance())
+
+                condition = res.register(self.condition())
+                if res.error: return res
+
+                if not self.current_tok.matches(TT_KEYWORD, "then"):
+                    return res.failure(InvalidSyntaxError(
+                        "Expected 'then'",
+                        self.current_tok.pos_start, self.current_tok.pos_end
+                    ))
+                
+                res.register(self.advance())
+
+                expr = res.register(self.expr())
+                if res.error: return res
+
+                cases.append((condition, expr))
+
+            else:
+                else_case = res.register(self.expr())
+                if res.error: return res
+
+        return res.success(IfNode(cases, else_case))
 
     def factor(self):
         res = ParseResult()
@@ -62,6 +112,11 @@ class Parser:
 
             return res.success(UnaryOpNode(tok, right))
 
+        elif tok.matches(TT_KEYWORD, "if"):
+            if_expr = res.register(self.if_expr())
+            if res.error: return res
+            return res.success(if_expr)
+
         return res.failure(InvalidSyntaxError(
             "Expected Float, Int or a parenthesis expression",
             self.current_tok.pos_start, self.current_tok.pos_end
@@ -87,6 +142,9 @@ class Parser:
             return res.success(UnaryOpNode(tok, right))
 
         return self.bin_op(self.arith_expr, (TT_EE, TT_NE, TT_LT, TT_LTE, TT_GT, TT_GTE))
+
+    def condition(self):
+        return self.bin_op(self.comp_expr, ((TT_KEYWORD, 'and'), (TT_KEYWORD, 'or')))
 
     def expr(self):
         res = ParseResult()
@@ -114,7 +172,7 @@ class Parser:
 
             return res.success(VarAssignNode(var_name, expr))
         
-        return self.bin_op(self.comp_expr, ((TT_KEYWORD, 'and'), (TT_KEYWORD, 'or')))
+        return self.condition()
 
     def bin_op(self, func, operands):
         res = ParseResult()

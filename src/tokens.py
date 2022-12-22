@@ -26,6 +26,9 @@ KEYWORDS = [
 	"and",
 	"or",
 	"not",
+	"if",
+	"then",
+	"else"
 ]
 
 # Define a class for tokens

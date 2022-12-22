@@ -1,5 +1,7 @@
 expr    	: KEYWORD:let IDENTIFIER EQ expr
-			: comp-expr ((KEYWORD:and|or) comp-expr)*
+			: condition
+
+condition	: comp-expr ((KEYWORD:and|or) comp-expr)*
 
 comp-expr	: (KEYWORD:not)* comp-expr
 			: arith-expr ((EE|NE|LT|GT|LTE|GTE) arith-expr)*
@@ -14,3 +16,8 @@ power		: factor (POW unary)*
 factor  	: INT | FLOAT | IDENTIFIER
 			: (PLUS|MINUS)* factor
 			: LPAREN expr RPAREN
+			: if-expr
+
+if-expr		: KEYWORD:if condition KEYWORD:then expr
+			: (KEYWORD:elif condition KEYWORD:then expr)*
+			: (KEYWORD:else expr)?

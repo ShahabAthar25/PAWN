@@ -66,7 +66,7 @@ if not dev:
             result, error = pawn(text)
 
             if error: print(error.as_string())            
-            else: print(result)
+            elif result: print(result)
     except KeyboardInterrupt:
         print(f"\nSession ended on {get_current_date()}")
         exit()
