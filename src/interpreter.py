@@ -1,5 +1,6 @@
 from error_handlers.RTResult import RTResult
 from dataTypes.number import Number
+from errors.RunTime import RTError
 from tokens import *
 
 class Interpreter:
@@ -22,20 +23,21 @@ class Interpreter:
         value = context.symbol_table.get(var_name)
 
         if not value:
-            res.failure(RTResult(
+            res.failure(RTError(
                 f"'{var_name}' is not defined",
-                node.pos_start, node.pos_end, self.context
+                node.pos_start, node.pos_end, context
             ))
 
-        return value
+        return res.success(value)
     
     def visit_VarAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
-        value = res.register(self.visit(node.value_node))
+        value = res.register(self.visit(node.value_node, context))
         if res.error: return res
 
         context.symbol_table.set(var_name, value)
+        return res.success(value)
 
     def visit_BinOpNode(self, node, context):
         res = RTResult()

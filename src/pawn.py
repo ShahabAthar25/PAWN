@@ -9,6 +9,12 @@ import datetime
 import platform
 import sys
 
+from symbolTable.symbolTable import SymbolTable
+from symbolTable.setGlobalSymbolTable import setGlobalSymbolTable
+
+global_symbol_table = SymbolTable()
+setGlobalSymbolTable(global_symbol_table)
+
 # Define a function that takes an input string and returns the resulting AST
 # and any error that occurred during parsing
 def pawn(text):
@@ -29,6 +35,7 @@ def pawn(text):
 
     interpreter = Interpreter()
     context = Context('<program>')
+    context.symbol_table = global_symbol_table
     result = interpreter.visit(ast.node, context)
 
     return result.value, result.error
