@@ -28,7 +28,8 @@ KEYWORDS = [
 	"not",
 	"if",
 	"then",
-	"else"
+	"else",
+	"while"
 ]
 
 # Define a class for tokens

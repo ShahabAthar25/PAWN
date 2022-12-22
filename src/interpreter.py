@@ -117,3 +117,17 @@ class Interpreter:
             return res.success(expr)
         
         return res.success(None)
+
+    def visit_WhileNode(self, node, context):
+        res = RTResult()
+
+        while True:
+            condition = res.register(self.visit(node.condition, context))
+            if res.error: return res
+
+            if condition == 0: break
+
+            res.register(self.visit(node.expr, context))
+            if res.error: return res
+
+        return res.success(None)

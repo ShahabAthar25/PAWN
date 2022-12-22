@@ -77,6 +77,27 @@ class Parser:
                 if res.error: return res
 
         return res.success(IfNode(cases, else_case))
+    
+    def while_loop(self):
+        res = ParseResult()
+
+        res.register(self.advance())
+
+        condition = res.register(self.condition())
+        if res.error: return res
+
+        if not self.current_tok.matches(TT_KEYWORD, 'then'):
+            return res.failure(InvalidSyntaxError(
+                "Expected 'then'",
+                self.current_tok.pos_start, self.current_tok.pos_end
+            ))
+        
+        res.register(self.advance())
+
+        expr = res.register(self.expr())
+        if res.error: return res
+
+        return res.success(WhileNode(condition, expr))
 
     def factor(self):
         res = ParseResult()
@@ -117,6 +138,11 @@ class Parser:
             if res.error: return res
             return res.success(if_expr)
 
+        elif tok.matches(TT_KEYWORD, "while"):
+            while_loop = res.register(self.while_loop())
+            if res.error: return res
+            return res.success(while_loop)
+
         return res.failure(InvalidSyntaxError(
             "Expected Float, Int or a parenthesis expression",
             self.current_tok.pos_start, self.current_tok.pos_end
@@ -138,7 +164,6 @@ class Parser:
             tok = self.current_tok
             res.register(self.advance())
             right = res.register(self.comp_expr())
-            res.success(right)
             return res.success(UnaryOpNode(tok, right))
 
         return self.bin_op(self.arith_expr, (TT_EE, TT_NE, TT_LT, TT_LTE, TT_GT, TT_GTE))

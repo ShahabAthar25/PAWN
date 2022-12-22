@@ -17,7 +17,10 @@ factor  	: INT | FLOAT | IDENTIFIER
 			: (PLUS|MINUS)* factor
 			: LPAREN expr RPAREN
 			: if-expr
+			: while-loop
 
 if-expr		: KEYWORD:if condition KEYWORD:then expr
 			: (KEYWORD:elif condition KEYWORD:then expr)*
 			: (KEYWORD:else expr)?
+
+while-loop	: KEYWORD:while condition KEYWORD:then expr
