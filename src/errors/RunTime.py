@@ -11,7 +11,6 @@ class RTError(Error):
         result = self.generate_traceback()
         result += f'{self.name}: {self.details}'
         result += '\n    ' + string_with_arrows(self.pos_start.filetext, self.pos_start, self.pos_end)
-        print(self.pos_start.pos, self.pos_end.pos)
         return result
 
     def generate_traceback(self):

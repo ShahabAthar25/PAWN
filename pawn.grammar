@@ -1,11 +1,16 @@
-expr    : KEYWORD:VAR IDENTIFIER EQ expr
-		: term ((ADD | SUB) term)*
+expr    	: KEYWORD:let IDENTIFIER EQ expr
+			: comp-expr ((KEYWORD:and|or) comp-expr)*
 
-term    : unary ((MUL | DIV | MOD) unary)*
+comp-expr	: (KEYWORD:not)* comp-expr
+			: arith-expr ((EE|NE|LT|GT|LTE|GTE) arith-expr)*
 
-unary	: (PLUS|MINUS) factor
+arith-expr	: term ((ADD | SUB) term)*
 
-power	: factor (POW unary)*
+term    	: unary ((MUL | DIV | MOD) unary)*
 
-factor  : INT | FLOAT | IDENTIFIER
-		: LPAREN expr RPAREN
+
+power		: factor (POW unary)*
+
+factor  	: INT | FLOAT | IDENTIFIER
+			: (PLUS|MINUS)* factor
+			: LPAREN expr RPAREN

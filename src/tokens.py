@@ -9,14 +9,23 @@ TT_MUL 			= "MUL"  # Multiplication token
 TT_ADD 			= "ADD"  # Addition token
 TT_SUB 			= "SUB"  # Subtraction token
 TT_MOD 			= "MOD"  # Modulus token
-TT_EQ 			= "EQ"  # Modulus token
 TT_LPAREN 		= "LPAREN"  # Left parenthesis token
 TT_RPAREN 		= "RPAREN"  # Right parenthesis token
 TT_UNARY_FACTOR = "UNARY_FACTOR"  # Unary factor token
+TT_EQ 			= "EQ"  # Equals token
+TT_EE 			= "EE"  # Equals to token
+TT_NE 			= "NE"  # Not equals to token
+TT_LT 			= "LT"  # Less than token
+TT_GT 			= "GT"  # Greater than token
+TT_LTE 			= "LTE"  # Less than or equals to token
+TT_GTE 			= "GTE"  # Greater than or equals to token
 TT_EOF 			= "EOF"  # End-of-file token
 
 KEYWORDS = [
-	"let"
+	"let",
+	"and",
+	"or",
+	"not",
 ]
 
 # Define a class for tokens

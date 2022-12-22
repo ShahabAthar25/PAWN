@@ -60,6 +60,22 @@ class Interpreter:
             result, error = left.modulus(right)
         elif node.op.type == TT_POW:
             result, error = left.power(right)
+        elif node.op.type == TT_EE:
+            result, error = left.equals_to(right)
+        elif node.op.type == TT_NE:
+            result, error = left.not_equals_to(right)
+        elif node.op.type == TT_LT:
+            result, error = left.less_than(right)
+        elif node.op.type == TT_LTE:
+            result, error = left.less_than_equals_to(right)
+        elif node.op.type == TT_GT:
+            result, error = left.greater_than(right)
+        elif node.op.type == TT_GTE:
+            result, error = left.greater_than_equals_to(right)
+        elif node.op.matches(TT_KEYWORD, 'and'):
+            result, error = left.and_operation(right)
+        elif node.op.matches(TT_KEYWORD, 'or'):
+            result, error = left.or_operation(right)
 
         if error:
             return res.failure(error)
@@ -75,6 +91,8 @@ class Interpreter:
         error = None
         if node.op.type == TT_SUB:
             number, error = number.multiplication(Number(-1))
+        if node.op.matches(TT_KEYWORD, 'not'):
+            number, error = number.not_operation()
 
         if error:
             return res.failure(error)

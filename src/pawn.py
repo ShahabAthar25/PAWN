@@ -1,10 +1,8 @@
-# Import the Lexer and Parser classes from the lexer and parserPawn modules
 from lexer import Lexer
 from parserPawn import Parser
 from interpreter import Interpreter
 from context import Context
 
-# Import the datetime, platform, and sys modules for use in various functions
 import datetime
 import platform
 import sys
@@ -15,22 +13,15 @@ from symbolTable.setGlobalSymbolTable import setGlobalSymbolTable
 global_symbol_table = SymbolTable()
 setGlobalSymbolTable(global_symbol_table)
 
-# Define a function that takes an input string and returns the resulting AST
-# and any error that occurred during parsing
 def pawn(text):
-    # Create a Lexer instance with the input text and a filename of "<stdin>"
     lexer = Lexer(text, "<stdin>")
-    # Tokenize the input text and save the result and any error that occurred
     tokens, error = lexer.make_tokens()
 
-    # If an error occurred during tokenization, return None for the AST and the error
     if error: return None, error
-    
-    # Create a Parser instance with the resulting tokens
+
     parser = Parser(tokens)
-    # Parse the tokens and save the resulting AST
     ast = parser.parse()
-    # If there was an error then returning the error and none as the result
+
     if ast.error: return None, ast.error
 
     interpreter = Interpreter()
@@ -40,82 +31,103 @@ def pawn(text):
 
     return result.value, result.error
 
-# Define a function that returns the current date and time in a specific format
+
 def get_current_date():
-    # Return the current date and time in the format "Month Day, Year Hour:Minute:Second"
     return datetime.date.today().strftime("%B %d, %Y") + " " + datetime.datetime.now().strftime("%H:%M:%S")
 
-# Try to get the filename passed as an argument to the script
 try:
     filename = sys.argv[1]
 except IndexError:
-    # If no filename was passed, set the filename to None
     filename = None
 
-# Set a flag to determine whether the user is asked if they want to run the script in debug mode
 ask_debug = False
-# Set a flag to determine whether the script is running in debug mode
 dev = False
 
-# If the ask_debug flag is set to True and the script is not already running in debug mode
 if ask_debug and not dev:
-    # Keep asking the user if they want to run the script in debug mode until they provide a valid response
     while True:
         debug = input("Do you want to begin this session as a debug session [y/n] ")
-        # If answer is y then luanch in dev mode
         if debug == "y":
             dev = True
             break
-        # If answer is n then luanch in shell mode
         elif debug == "n":
             dev = False
             break
-        # If answer is not a n or y then ask user to input correct answer again and again
-        # until correct answer is given
         else:
             print(f"The expected input was not y or n please try again.")
 
-# If the script is not running in debug mode
 if not dev:
-    # Print the welcome message and instructions for using the shell
     print(f"PAWN 0.0.1 (main, ALPHA) on {platform.system()} {platform.release()}, shell session started at {get_current_date()}")
     print(f"Type 'help()' for help")
-
-    # Run an infinite loop to read and execute input from the user
+    
     try:
         while True:
-            # Read a line of input from the user
             text = input(">>> ")
-
-            # Parse and execute the input and save the result and any error that occurred
+            
             result, error = pawn(text)
 
-            # If an error occurred, print it
-            if error: print(error.as_string())
-            # If no error occurred, print the result of the execution
+            if error: print(error.as_string())            
             else: print(result)
-    # If the user sends a keyboard interrupt (Ctrl+C), print a message and exit the program
     except KeyboardInterrupt:
         print(f"\nSession ended on {get_current_date()}")
         exit()
-# If the script is running in debug mode
 else:
-    # Set a list of test statements to be executed
-    text = ["-2", "-2^2"]
+    tests = [
+            "3 + 4 - 2",
+            "8 / 4 * 2",
+            "2^3 % 7",
+            "(5 + 3) * (2 - 1)",
+            "10 - 3 * 2 / 4",
+            "8 + 2 * (5 - 3)",
+            "3 * (5 + 1) - 2 / 4",
+            "4 % 3 + 7 * (2 - 1)",
+            "2^(3-1) + 10 / 5",
+            "8 - 3 + 2 * (5 - 1)",
+            "let a = 5",
+            "a/5",
+        ]
+    test_ans = [
+        "5",
+        "4",
+        "1",
+        "8",
+        "8.5",
+        "12",
+        "17.5",
+        "8",
+        "6",
+        "13",
+        "5",
+        "1"
+    ]
 
-    # Print a warning that the script is running in debug mode
-    print("Warning: Debug mode is on!!!")
-    # Loop through the test statements
-    for i in range(len(text)):
-        # Print the statement being executed
-        print(f"Running statement '{text[i]}'\n")
-
-        # Parse and execute the statement and save the result and any error that occurred
-        result, error = pawn(text[i])
-
-        # If an error occurred, print it
-        if error: print(error.as_string())
-        # If no error occurred, print the result of the execution
-        else: print(result)
-        # Print a separator line
-        print("--------------------------\n")
+    print("Warning: Debug mode is on!!!") 
+    test_passed = 0   
+    test_failed = 0
+    test_failed_pos = []
+    test_failed_ans = []
+    print(f"Running tests\n")
+    for i in range(len(tests)):
+        result, error = pawn(tests[i])
+        if str(result) == test_ans[i] or str(result) == test_ans[i] + ".0":
+            test_passed += 1
+        else:
+            test_failed += 1
+            test_failed_pos.append(i)
+            test_failed_ans.append(result)
+    
+    print(f"Test passed: {test_passed}")
+    print(f"Test failed: {test_failed}")
+    if test_failed != 0:
+        try:
+            while True:
+                text = input("Do you want to see the failed tests[y/n]: ")
+                if text == "y":
+                    for i in range(len(test_failed_pos)):
+                        print(f"{tests[test_failed_pos[i]]} = {test_failed_ans[i]} while expected {test_ans[test_failed_pos[i]]}")
+                    break
+                elif text == "n":
+                    break
+                else:
+                    pass
+        except KeyboardInterrupt:
+            print("\nExiting")
