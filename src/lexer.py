@@ -37,6 +37,9 @@ class Lexer:
                 tokens.append(self.make_number())
             elif self.current_char in LETTERS:
                 tokens.append(self.make_identifier())
+            elif self.current_char == ",":
+                tokens.append(Token(TT_COMMA, pos_start=self.pos))
+                self.advance()
             elif self.current_char == "+":
                 tokens.append(Token(TT_ADD, pos_start=self.pos))
                 self.advance()

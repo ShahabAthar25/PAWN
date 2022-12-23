@@ -43,6 +43,9 @@ class VarAccessNode:
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.var_name_tok.pos_end
 
+    def __repr__(self):
+        return f'VARIABLE:{self.var_name_tok.value}'
+
 class VarAssignNode:
     def __init__(self, var_name_tok, value_node):
         self.var_name_tok = var_name_tok
@@ -50,6 +53,9 @@ class VarAssignNode:
 
         self.pos_start = self.var_name_tok.pos_start
         self.pos_end = self.value_node.pos_end
+
+    def __repr__(self):
+        return f'let {self.var_name_tok} = {self.value_node}'
 
 class IfNode:
     def __init__(self, cases, else_case):
@@ -66,3 +72,16 @@ class WhileNode:
 
         self.pos_start = self.condition.pos_start
         self.pos_end = self.expr.pos_end
+
+class ForNode:
+    def __init__(self, starting_value, ending_value, gaps, expr):
+        self.starting_value = starting_value
+        self.ending_value = ending_value
+        self.gaps = gaps
+        self.expr = expr
+
+        self.pos_start = self.starting_value.pos_start
+        self.pos_end = self.expr.pos_end
+
+    def __repr__(self):
+        return f'for ({self.starting_value}, {self.ending_value}, {self.gaps}) then {self.expr}'

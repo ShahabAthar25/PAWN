@@ -27,6 +27,85 @@ class Parser:
                 self.current_tok.pos_start, self.current_tok.pos_end
             ))
         return res
+
+    def for_loop(self):
+        res = ParseResult()
+
+        res.register(self.advance())
+
+        if self.current_tok.type != TT_LPAREN:
+            return res.failure(InvalidSyntaxError(
+                "Expected '('",
+                self.current_tok.pos_start, self.current_tok.pos_end
+            ))
+        
+        res.register(self.advance())
+
+        starting_value = res.register(self.expr())
+        if res.error: return res
+
+        if self.current_tok.type != TT_COMMA:
+            return res.failure(InvalidSyntaxError(
+                "Expected ','",
+                self.current_tok.pos_start, self.current_tok.pos_end
+            ))
+        
+        res.register(self.advance())
+
+        ending_value = res.register(self.arith_expr())
+        if res.error: return res
+
+
+        if self.current_tok.type == TT_COMMA:
+            res.register(self.advance())
+
+            gaps = res.register(self.arith_expr())
+            if res.error: return res
+        
+        else:
+            gaps = None
+
+        if self.current_tok.type != TT_RPAREN:
+            return res.failure(InvalidSyntaxError(
+                "Expected ')'",
+                self.current_tok.pos_start, self.current_tok.pos_end
+            ))
+
+        res.register(self.advance())
+
+        if not self.current_tok.matches(TT_KEYWORD, 'then'):
+            return res.failure(InvalidSyntaxError(
+                "Expected 'then'",
+                self.current_tok.pos_start, self.current_tok.pos_end
+            ))
+
+        res.register(self.advance())
+
+        expr = res.register(self.expr())
+        if res.error: return res
+
+        return res.success(ForNode(starting_value, ending_value, gaps, expr))
+
+    def while_loop(self):
+        res = ParseResult()
+
+        res.register(self.advance())
+
+        condition = res.register(self.condition())
+        if res.error: return res
+
+        if not self.current_tok.matches(TT_KEYWORD, 'then'):
+            return res.failure(InvalidSyntaxError(
+                "Expected 'then'",
+                self.current_tok.pos_start, self.current_tok.pos_end
+            ))
+        
+        res.register(self.advance())
+
+        expr = res.register(self.expr())
+        if res.error: return res
+
+        return res.success(WhileNode(condition, expr))
     
     def if_expr(self):
         res = ParseResult()
@@ -77,27 +156,6 @@ class Parser:
                 if res.error: return res
 
         return res.success(IfNode(cases, else_case))
-    
-    def while_loop(self):
-        res = ParseResult()
-
-        res.register(self.advance())
-
-        condition = res.register(self.condition())
-        if res.error: return res
-
-        if not self.current_tok.matches(TT_KEYWORD, 'then'):
-            return res.failure(InvalidSyntaxError(
-                "Expected 'then'",
-                self.current_tok.pos_start, self.current_tok.pos_end
-            ))
-        
-        res.register(self.advance())
-
-        expr = res.register(self.expr())
-        if res.error: return res
-
-        return res.success(WhileNode(condition, expr))
 
     def factor(self):
         res = ParseResult()
@@ -142,6 +200,11 @@ class Parser:
             while_loop = res.register(self.while_loop())
             if res.error: return res
             return res.success(while_loop)
+
+        elif tok.matches(TT_KEYWORD, "for"):
+            for_loop = res.register(self.for_loop())
+            if res.error: return res
+            return res.success(for_loop)
 
         return res.failure(InvalidSyntaxError(
             "Expected Float, Int or a parenthesis expression",

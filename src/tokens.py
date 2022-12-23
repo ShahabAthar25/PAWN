@@ -19,6 +19,7 @@ TT_LT 			= "LT"  # Less than token
 TT_GT 			= "GT"  # Greater than token
 TT_LTE 			= "LTE"  # Less than or equals to token
 TT_GTE 			= "GTE"  # Greater than or equals to token
+TT_COMMA		= "COMMA"  # comma token
 TT_EOF 			= "EOF"  # End-of-file token
 
 KEYWORDS = [
@@ -29,7 +30,8 @@ KEYWORDS = [
 	"if",
 	"then",
 	"else",
-	"while"
+	"while",
+	"for",
 ]
 
 # Define a class for tokens

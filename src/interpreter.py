@@ -131,3 +131,24 @@ class Interpreter:
             if res.error: return res
 
         return res.success(None)
+
+    def visit_ForNode(self, node, context):
+        res = RTResult()
+
+        starting_value = res.register(self.visit(node.starting_value, context))
+        if res.error: return res
+
+        ending_value = res.register(self.visit(node.ending_value, context))
+        if res.error: return res
+
+        if node.gaps:
+            gaps = res.register(self.visit(node.gaps, context))
+            if res.error: return res
+        else:
+            gaps = Number(1)
+
+        for i in range(starting_value.value, ending_value.value, gaps.value):
+            res.register(self.visit(node.expr, context))
+            if res.error: return res
+        
+        return res.success(None)
