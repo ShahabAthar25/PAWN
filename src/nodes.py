@@ -57,6 +57,17 @@ class VarAssignNode:
     def __repr__(self):
         return f'let {self.var_name_tok} = {self.value_node}'
 
+class VarUpdateNode:
+    def __init__(self, var_name_tok, value_node):
+        self.var_name_tok = var_name_tok
+        self.value_node = value_node
+
+        self.pos_start = self.var_name_tok.pos_start
+        self.pos_end = self.value_node.pos_end
+
+    def __repr__(self):
+        return f'update {self.var_name_tok} = {self.value_node}'
+
 class IfNode:
     def __init__(self, cases, else_case):
         self.cases = cases
@@ -85,3 +96,29 @@ class ForNode:
 
     def __repr__(self):
         return f'for ({self.starting_value}, {self.ending_value}, {self.gaps}) then {self.expr}'
+
+class FuncNode:
+    def __init__(self, name, args, expr):
+        self.name = name
+        self.args = args
+        self.expr = expr
+
+        if self.func_name:
+            self.pos_start = self.func_name.pos_start
+        elif len(self.args) > 0:
+            self.pos_start = self.args[0].pos_start
+        else:
+            self.pos_start = self.expr.pos_start
+
+        self.pos_end = self.expr.pos_end
+
+    def __repr__(self):
+        return f"func {self.var_name or ''} ({self.args or ''}) => {self.expr}"
+
+class CallNode:
+    def __init__(self, node, args):
+        self.node = node
+        self.args = args
+
+    def __repr__(self):
+        return f"{self.node}({self.args})"

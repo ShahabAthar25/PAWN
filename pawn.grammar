@@ -1,4 +1,5 @@
 expr    	: KEYWORD:let IDENTIFIER EQ expr
+			: TT_IDENTIFIER EQ expr # Update variable
 			: condition
 
 condition	: comp-expr ((KEYWORD:and|or) comp-expr)*
@@ -13,18 +14,24 @@ term    	: unary ((MUL | DIV | MOD) unary)*
 
 power		: factor (POW unary)*
 
+call		: factor (LPAREN (IDENTIFIER (COMMA IDENTIFIER)*)? RPAREN)?
+
 factor  	: INT | FLOAT | IDENTIFIER
 			: (PLUS|MINUS)* factor
 			: LPAREN expr RPAREN
 			: if-expr
 			: while-loop
+			: func
 
-if-expr		: KEYWORD:if condition KEYWORD:then expr
+if-expr		: KEYWORD:if LPAREN condition RPAREN RCURLY expr
 			: (KEYWORD:elif condition KEYWORD:then expr)*
-			: (KEYWORD:else expr)?
+			: (KEYWORD:else expr)? LCURLY
 
-while-loop	: KEYWORD:while condition KEYWORD:then expr
+while-loop	: KEYWORD:while LPAREN condition RPAREN LCURLY expr RCURLY
 
-for-loop	: KEYWORD:for LPAREN expr COMMA arith-expr (COMMA arit-expr)? KEYWORD:then expr
+for-loop	: KEYWORD:for LPAREN expr COMMA arith-expr
+			 (COMMA arit-expr)? RPAREN LCURLY expr RCURLY
 
-for (let i = 1, 10, 1*i) then 1+1
+func		: KEYWORD:func IDENTIFIER?
+			  LPAREN (IDENTIFIER (COMMA IDENTIFIER)*)? RPAREN
+			  ARROW expr

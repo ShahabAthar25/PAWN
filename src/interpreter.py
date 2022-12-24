@@ -30,6 +30,22 @@ class Interpreter:
 
         return res.success(value)
     
+    def visit_VarUpdateNode(self, node, context):
+        res = RTResult()
+        var_name = node.var_name_tok.value
+        var_name_value = context.symbol_table.get(var_name)
+
+        if not var_name_value:
+            res.failure(RTError(
+                f"Cannot update variable '{var_name}' since it is not defined. try adding 'let' before the statement",
+                node.pos_start, node.pos_end, context
+            ))
+
+        value = res.register(self.visit(node.value_node, context))
+        context.symbol_table.set(var_name, value)
+
+        return res.success(value)
+
     def visit_VarAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value

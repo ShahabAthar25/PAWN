@@ -64,6 +64,12 @@ class Lexer:
             elif self.current_char == ")":
                 tokens.append(Token(TT_RPAREN, pos_start=self.pos))
                 self.advance()
+            elif self.current_char == "{":
+                tokens.append(Token(TT_LCURLY, pos_start=self.pos))
+                self.advance()
+            elif self.current_char == "}":
+                tokens.append(Token(TT_RCURLY, pos_start=self.pos))
+                self.advance()
             elif self.current_char == "!":
                 tokens.append(self.make_not_equals())
             elif self.current_char == "=":
