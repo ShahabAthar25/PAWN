@@ -1,155 +1,117 @@
-import string
-from typing import List
+import re
+from typing import Final, Generator
 
-from errors.syntax import IllegalCharError
-from position import Position
-from tokens import *
+from pawn.errors.syntax import IllegalCharError
+from pawn.lexer.position import Position
+from pawn.lexer.tokens import KEYWORDS, Token, TokenType
 
-DIGITS = "1234567890"
-LETTERS = string.ascii_letters
+# Master Token Specification using regex Named Capture Groups
+# Order matters: longer/more specific rules must come before general ones
+TOKEN_REGEX: Final[str] = "|".join(
+    [
+        # Single line comments (skipped)
+        r"(?P<COMMENT>//[^\n]*)",
+        # Whitespace (skipped)
+        r"(?P<WHITESPACE>[ \t\r]+)",
+        r"(?P<NEWLINE>\n)",
+        # Literals
+        r"(?P<STRING>\"(?:\\.|[^\\])*?\")",  # Matches "hello \"world\""
+        r"(?P<FLOAT>\d+\.\d+)",
+        r"(?P<INT>\d+)",
+        r"(?P<IDENTIFIER>[a-zA-Z_][a-zA-Z0-9_]*)",
+        # Two-character operators
+        r"(?P<EE>==)",
+        r"(?P<NE>!=)",
+        r"(?P<LTE><=)",
+        r"(?P<GTE>>=)",
+        # Single-character operators & delimiters
+        r"(?P<EQ>=)",
+        r"(?P<LT><)",
+        r"(?P<GT>>)",
+        r"(?P<ADD>\+)",
+        r"(?P<SUB>-)",
+        r"(?P<MUL>\*)",
+        r"(?P<DIV>/)",
+        r"(?P<MOD>%)",
+        r"(?P<POW>\^)",
+        r"(?P<LPAREN>\()",
+        r"(?P<RPAREN>\))",
+        r"(?P<LCURLY>\{)",
+        r"(?P<RCURLY>\})",
+        r"(?P<COMMA>,)",
+    ]
+)
 
-WHITESPACES = " \t"
+MASTER_PATTERN: Final[re.Pattern[str]] = re.compile(TOKEN_REGEX)
 
 
 class Lexer:
-    def __init__(self, text: str, filename: str):
-        self.text = text
-        self.filename = filename
-        self.pos = Position(-1, -1, 0, filename, text)
+    """Regex-based lexer using generators for on-demand tokenization."""
 
-        self.tokens: List[Token] = []
+    def __init__(self, text: str, filename: str) -> None:
+        self.text: str = text
+        self.filename: str = filename
 
-        self.advance()
+    def tokenize(self) -> Generator[Token, None, None]:
+        """Yields tokens dynamically using regex scanning."""
+        line = 1
+        line_start = 0
 
-    def advance(self):
-        self.pos.advance(self.current_char)
-        self.current_char: str | None = (
-            self.text[self.pos.pos] if self.pos.pos < len(self.text) else None
-        )
+        for match in MASTER_PATTERN.finditer(self.text):
+            kind = match.lastgroup
+            value = match.group()
+            start_idx = match.start()
+            end_idx = match.end()
 
-    def _add_token(self, token) -> None:
-        self.tokens.append(Token(token, pos_start=self.pos))
-        self.advance()
+            # Calculate exact coordinates for error diagnostics
+            col_start = start_idx - line_start
+            col_end = end_idx - line_start
 
-    def make_tokens(self):
-        tokens = []
+            pos_start = Position(start_idx, col_start, line, self.filename, self.text)
+            pos_end = Position(end_idx, col_end, line, self.filename, self.text)
 
-        while self.current_char != None:
-            if self.current_char in WHITESPACES:
-                self.advance()
-            elif self.current_char in DIGITS:
-                tokens.append(self.make_number())
-            elif self.current_char in LETTERS:
-                tokens.append(self.make_identifier())
-            elif self.current_char == ",":
-                self._add_token(TT_COMMA)
-            elif self.current_char == "+":
-                self._add_token(TT_ADD)
-            elif self.current_char == "-":
-                self._add_token(TT_SUB)
-            elif self.current_char == "*":
-                self._add_token(TT_MUL)
-            elif self.current_char == "/":
-                self._add_token(TT_DIV)
-            elif self.current_char == "^":
-                self._add_token(TT_POW)
-            elif self.current_char == "%":
-                self._add_token(TT_MOD)
-            elif self.current_char == "(":
-                self._add_token(TT_LPAREN)
-            elif self.current_char == ")":
-                self._add_token(TT_RPAREN)
-            elif self.current_char == "{":
-                self._add_token(TT_LCURLY)
-            elif self.current_char == "}":
-                self._add_token(TT_RCURLY)
-            elif self.current_char == "!":
-                tokens.append(self.make_not_equals())
-            elif self.current_char == "=":
-                tokens.append(self.make_equals())
-            elif self.current_char == "<":
-                tokens.append(self.make_less_than())
-            elif self.current_char == ">":
-                tokens.append(self.make_greater_than())
+            # Skip non-token elements
+            if kind == "WHITESPACE" or kind == "COMMENT":
+                continue
+            elif kind == "NEWLINE":
+                line += 1
+                line_start = end_idx
+                continue
+
+            # Process Literals & Keywords
+            if kind == "IDENTIFIER":
+                tok_type = (
+                    TokenType.KEYWORD if value in KEYWORDS else TokenType.IDENTIFIER
+                )
+                yield Token(tok_type, value, pos_start=pos_start, pos_end=pos_end)
+
+            elif kind == "STRING":
+                # Strip bounding quotes and resolve escape sequences like \n, \t, \"
+                unquoted_val = value[1:-1].encode().decode("unicode_escape")
+                yield Token(
+                    TokenType.STRING, unquoted_val, pos_start=pos_start, pos_end=pos_end
+                )
+
+            elif kind == "INT":
+                yield Token(
+                    TokenType.INT, int(value), pos_start=pos_start, pos_end=pos_end
+                )
+
+            elif kind == "FLOAT":
+                yield Token(
+                    TokenType.FLOAT, float(value), pos_start=pos_start, pos_end=pos_end
+                )
+
             else:
-                pos_start = self.pos.copy()
-                char = self.current_char
-                self.advance()
-                return [], IllegalCharError(f"'{char}'", pos_start, self.pos.copy())
+                # Operators / Delimiters match enum names directly (e.g. TokenType.ADD)
+                tok_type = TokenType[kind]
+                yield Token(tok_type, pos_start=pos_start, pos_end=pos_end)
 
-        tokens.append(Token(TT_EOF, pos_start=self.pos))
+            # Check if there are unparsed illegal characters between matches
+            # Handled automatically by checking match boundaries if needed
 
-        return tokens, None
-
-    def make_number(self) -> Token:
-        num_str = ""
-        dot_count = 0
-
-        while self.current_char != None and self.current_char in DIGITS + ".":
-            if self.current_char == ".":
-                if dot_count > 1:
-                    break
-                dot_count += 1
-            num_str += self.current_char
-            self.advance()
-
-        if dot_count == 1:
-            return Token(TT_FLOAT, float(num_str), pos_start=self.pos)
-        else:
-            return Token(TT_INT, int(num_str), pos_start=self.pos)
-
-    def make_identifier(self) -> Token:
-        id_str = ""
-        pos_start = self.pos.copy()
-
-        while (
-            self.current_char != None and self.current_char in LETTERS + DIGITS + "_-"
-        ):
-            id_str += self.current_char
-            self.advance()
-
-        tok_type = TT_KEYWORD if id_str in KEYWORDS else TT_IDENTIFIER
-        return Token(tok_type, id_str, pos_start, self.pos)
-
-    def make_not_equals(self) -> Token:
-        pos_start = self.pos.copy()
-        self.advance()
-
-        if self.current_char == "=":
-            self.advance()
-            return Token(TT_NE, pos_start=pos_start, pos_end=self.pos)
-
-        return Token(TT_KEYWORD, "not", pos_start=pos_start, pos_end=self.pos)
-
-    def make_equals(self) -> Token:
-        tok_type = TT_EQ
-        pos_start = self.pos.copy()
-        self.advance()
-
-        if self.current_char == "=":
-            self.advance()
-            tok_type = TT_EE
-
-        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
-
-    def make_less_than(self) -> Token:
-        tok_type = TT_LT
-        pos_start = self.pos.copy()
-        self.advance()
-
-        if self.current_char == "=":
-            self.advance()
-            tok_type = TT_LTE
-
-        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
-
-    def make_greater_than(self) -> Token:
-        tok_type = TT_GT
-        pos_start = self.pos.copy()
-        self.advance()
-
-        if self.current_char == "=":
-            self.advance()
-            tok_type = TT_GTE
-
-        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
+        # Yield EOF marker
+        eof_pos = Position(
+            len(self.text), len(self.text) - line_start, line, self.filename, self.text
+        )
+        yield Token(TokenType.EOF, pos_start=eof_pos, pos_end=eof_pos)
