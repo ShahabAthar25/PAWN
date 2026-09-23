@@ -1,10 +1,13 @@
+from typing import List
+
 from error_handlers.parseResult import ParseResult
 from errors.syntax import InvalidSyntaxError
-from tokens import *
 from nodes import *
+from tokens import *
+
 
 class Parser:
-    def __init__(self, tokens):
+    def __init__(self, tokens: List[Token]):
         self.tokens = tokens
         self.pos = -1
         self.current_tok = None
@@ -30,10 +33,13 @@ class Parser:
     def parse(self):
         res = self.expr()
         if not res.error and self.current_tok.type != TT_EOF:
-            return res.failure(InvalidSyntaxError(
-                "Expected '(', '+', '-', '*', '/' or '^'",
-                self.current_tok.pos_start, self.current_tok.pos_end
-            ))
+            return res.failure(
+                InvalidSyntaxError(
+                    "Expected '(', '+', '-', '*', '/' or '^'",
+                    self.current_tok.pos_start,
+                    self.current_tok.pos_end,
+                )
+            )
         return res
 
     def check_for(self, token, err_msg):
@@ -43,10 +49,11 @@ class Parser:
             res.register(self.advance())
             return res.success(token)
 
-        return res.failure(InvalidSyntaxError(
-            err_msg,
-            self.current_tok.pos_start, self.current_tok.pos_end
-        ))
+        return res.failure(
+            InvalidSyntaxError(
+                err_msg, self.current_tok.pos_start, self.current_tok.pos_end
+            )
+        )
 
     def func_expr(self):
         res = ParseResult()
@@ -62,7 +69,8 @@ class Parser:
             err_msg = "Expected identifier or '('"
 
         res.register(self.check_for(TT_LPAREN, err_msg))
-        if res.error: return res
+        if res.error:
+            return res
 
         args = []
 
@@ -75,24 +83,28 @@ class Parser:
                 tok = self.current_tok
 
                 res.register(self.check_for(TT_IDENTIFIER, "Expected identifier"))
-                if res.error: return res
-                
+                if res.error:
+                    return res
+
                 args.append(tok)
 
         res.register(self.check_for(TT_RPAREN, "Expected ')'"))
-        if res.error: return res
+        if res.error:
+            return res
 
         res.register(self.check_for(TT_LCURLY, "Expected '{'"))
-        if res.error: return res
+        if res.error:
+            return res
 
         expr = res.register(self.expr())
-        if res.error: return res
+        if res.error:
+            return res
 
         res.register(self.check_for(TT_RCURLY, "Expected '}'"))
-        if res.error: return res
+        if res.error:
+            return res
 
         return res.success(FuncNode(identifier, args, expr))
-        
 
     def for_loop(self):
         res = ParseResult()
@@ -100,37 +112,46 @@ class Parser:
         res.register(self.advance())
 
         res.register(self.check_for(TT_LPAREN, "Expected '('"))
-        if res.error: return res
+        if res.error:
+            return res
 
         starting_value = res.register(self.expr())
-        if res.error: return res
+        if res.error:
+            return res
 
         res.register(self.check_for(TT_COMMA, "Expected ','"))
-        if res.error: return res
+        if res.error:
+            return res
 
         ending_value = res.register(self.arith_expr())
-        if res.error: return res
+        if res.error:
+            return res
 
         if self.current_tok.type == TT_COMMA:
             res.register(self.advance())
 
             gaps = res.register(self.arith_expr())
-            if res.error: return res
-        
+            if res.error:
+                return res
+
         else:
             gaps = None
 
         res.register(self.check_for(TT_RPAREN, "Expected ')'"))
-        if res.error: return res
+        if res.error:
+            return res
 
         res.register(self.check_for(TT_LCURLY, "Expected '{'"))
-        if res.error: return res
+        if res.error:
+            return res
 
         expr = res.register(self.expr())
-        if res.error: return res
+        if res.error:
+            return res
 
         res.register(self.check_for(TT_RCURLY, "Expected '}'"))
-        if res.error: return res
+        if res.error:
+            return res
 
         return res.success(ForNode(starting_value, ending_value, gaps, expr))
 
@@ -140,25 +161,31 @@ class Parser:
         res.register(self.advance())
 
         res.register(self.check_for(TT_LPAREN, "Expected '('"))
-        if res.error: return res
+        if res.error:
+            return res
 
         condition = res.register(self.condition())
-        if res.error: return res
+        if res.error:
+            return res
 
         res.register(self.check_for(TT_RPAREN, "Expected ')'"))
-        if res.error: return res
+        if res.error:
+            return res
 
         res.register(self.check_for(TT_LCURLY, "Expected '{'"))
-        if res.error: return res
+        if res.error:
+            return res
 
         expr = res.register(self.expr())
-        if res.error: return res
+        if res.error:
+            return res
 
         res.register(self.check_for(TT_RCURLY, "Expected '}'"))
-        if res.error: return res
+        if res.error:
+            return res
 
         return res.success(WhileNode(condition, expr))
-    
+
     def if_expr(self):
         res = ParseResult()
         cases = []
@@ -167,22 +194,28 @@ class Parser:
         res.register(self.advance())
 
         res.register(self.check_for(TT_LPAREN, "Expected '('"))
-        if res.error: return res
+        if res.error:
+            return res
 
         condition = res.register(self.condition())
-        if res.error: return res
+        if res.error:
+            return res
 
         res.register(self.check_for(TT_RPAREN, "Expected ')'"))
-        if res.error: return res
+        if res.error:
+            return res
 
         res.register(self.check_for(TT_LCURLY, "Expected '{'"))
-        if res.error: return res
-        
+        if res.error:
+            return res
+
         expr = res.register(self.expr())
-        if res.error: return res
+        if res.error:
+            return res
 
         res.register(self.check_for(TT_RCURLY, "Expected '}'"))
-        if res.error: return res
+        if res.error:
+            return res
 
         cases.append((condition, expr))
 
@@ -193,34 +226,43 @@ class Parser:
                 res.register(self.advance())
 
                 res.register(self.check_for(TT_LPAREN, "Expected '('"))
-                if res.error: return res
+                if res.error:
+                    return res
 
                 condition = res.register(self.condition())
-                if res.error: return res
+                if res.error:
+                    return res
 
                 res.register(self.check_for(TT_RPAREN, "Expected ')'"))
-                if res.error: return res
+                if res.error:
+                    return res
 
                 res.register(self.check_for(TT_LCURLY, "Expected '{'"))
-                if res.error: return res
+                if res.error:
+                    return res
 
                 expr = res.register(self.expr())
-                if res.error: return res
+                if res.error:
+                    return res
 
                 res.register(self.check_for(TT_RCURLY, "Expected '}'"))
-                if res.error: return res
+                if res.error:
+                    return res
 
                 cases.append((condition, expr))
 
             else:
                 res.register(self.check_for(TT_LCURLY, "Expected '{'"))
-                if res.error: return res
+                if res.error:
+                    return res
 
                 else_case = res.register(self.expr())
-                if res.error: return res
+                if res.error:
+                    return res
 
                 res.register(self.check_for(TT_RCURLY, "Expected '}'"))
-                if res.error: return res
+                if res.error:
+                    return res
 
         return res.success(IfNode(cases, else_case))
 
@@ -231,60 +273,72 @@ class Parser:
         if tok.type in (TT_INT, TT_FLOAT):
             res.register(self.advance())
             return res.success(NumberNode(tok))
-        
+
         elif tok.type == TT_IDENTIFIER:
             res.register(self.advance())
             return res.success(VarAccessNode(tok))
-        
+
         elif tok.type == TT_LPAREN:
             res.register(self.advance())
             expr = res.register(self.expr())
-            if res.error: return res
+            if res.error:
+                return res
 
             if self.current_tok.type == TT_RPAREN:
                 res.register(self.advance())
                 return res.success(expr)
             else:
-                return res.failure(InvalidSyntaxError(
-                    "Expected ')'",
-                    self.current_tok.pos_start, self.current_tok.pos_end
-                ))
+                return res.failure(
+                    InvalidSyntaxError(
+                        "Expected ')'",
+                        self.current_tok.pos_start,
+                        self.current_tok.pos_end,
+                    )
+                )
 
         elif tok.type in (TT_ADD, TT_SUB):
             res.register(self.advance())
 
             right = res.register(self.factor())
-            if res.error: return res
+            if res.error:
+                return res
 
             return res.success(UnaryOpNode(tok, right))
 
         elif tok.matches(TT_KEYWORD, "if"):
             if_expr = res.register(self.if_expr())
-            if res.error: return res
+            if res.error:
+                return res
             return res.success(if_expr)
 
         elif tok.matches(TT_KEYWORD, "while"):
             while_loop = res.register(self.while_loop())
-            if res.error: return res
+            if res.error:
+                return res
             return res.success(while_loop)
 
         elif tok.matches(TT_KEYWORD, "for"):
             for_loop = res.register(self.for_loop())
-            if res.error: return res
+            if res.error:
+                return res
             return res.success(for_loop)
 
         elif tok.matches(TT_KEYWORD, "func"):
             func_expr = res.register(self.func_expr())
-            if res.error: return res
+            if res.error:
+                return res
             return res.success(func_expr)
 
-        return res.failure(InvalidSyntaxError(
-            "Expected Float, Int or a parenthesis expression",
-            self.current_tok.pos_start, self.current_tok.pos_end
-        ))
+        return res.failure(
+            InvalidSyntaxError(
+                "Expected Float, Int or a parenthesis expression",
+                self.current_tok.pos_start,
+                self.current_tok.pos_end,
+            )
+        )
 
     def power(self):
-        return self.bin_op(self.factor, (TT_POW, ))
+        return self.bin_op(self.factor, (TT_POW,))
 
     def term(self):
         return self.bin_op(self.power, (TT_MUL, TT_DIV, TT_MOD))
@@ -295,44 +349,53 @@ class Parser:
     def comp_expr(self):
         res = ParseResult()
 
-        if self.current_tok.matches(TT_KEYWORD, 'not'):
+        if self.current_tok.matches(TT_KEYWORD, "not"):
             tok = self.current_tok
             res.register(self.advance())
             right = res.register(self.comp_expr())
             return res.success(UnaryOpNode(tok, right))
 
-        return self.bin_op(self.arith_expr, (TT_EE, TT_NE, TT_LT, TT_LTE, TT_GT, TT_GTE))
+        return self.bin_op(
+            self.arith_expr, (TT_EE, TT_NE, TT_LT, TT_LTE, TT_GT, TT_GTE)
+        )
 
     def condition(self):
-        return self.bin_op(self.comp_expr, ((TT_KEYWORD, 'and'), (TT_KEYWORD, 'or')))
+        return self.bin_op(self.comp_expr, ((TT_KEYWORD, "and"), (TT_KEYWORD, "or")))
 
     def expr(self):
         res = ParseResult()
 
-        if self.current_tok.matches(TT_KEYWORD, 'let'):
+        if self.current_tok.matches(TT_KEYWORD, "let"):
             res.register(self.advance())
 
             if self.current_tok.type != TT_IDENTIFIER:
-                return res.failure(InvalidSyntaxError(
-                    "Expected identifier",
-                    self.current_tok.pos_start, self.current_tok.pos_end
-                ))
-            
+                return res.failure(
+                    InvalidSyntaxError(
+                        "Expected identifier",
+                        self.current_tok.pos_start,
+                        self.current_tok.pos_end,
+                    )
+                )
+
             var_name = self.current_tok
             res.register(self.advance())
 
             if self.current_tok.type != TT_EQ:
-                return res.failure(InvalidSyntaxError(
-                    "Expected '='",
-                    self.current_tok.pos_start, self.current_tok.pos_end
-                ))
+                return res.failure(
+                    InvalidSyntaxError(
+                        "Expected '='",
+                        self.current_tok.pos_start,
+                        self.current_tok.pos_end,
+                    )
+                )
 
             res.register(self.advance())
             expr = res.register(self.expr())
-            if res.error: return res
+            if res.error:
+                return res
 
             return res.success(VarAssignNode(var_name, expr))
-        
+
         elif self.current_tok.type == TT_IDENTIFIER:
             tok = self.current_tok
             res.register(self.advance())
@@ -340,7 +403,8 @@ class Parser:
             if self.current_tok.type == TT_EQ:
                 res.register(self.advance())
                 value_node = res.register(self.expr())
-                if res.error: return res
+                if res.error:
+                    return res
                 return res.success(VarUpdateNode(tok, value_node))
 
             res.register(self.retreat())
@@ -351,13 +415,18 @@ class Parser:
         res = ParseResult()
 
         left = res.register(func())
-        if res.error: return res
+        if res.error:
+            return res
 
-        while self.current_tok.type in operands or (self.current_tok.type, self.current_tok.value) in operands:
+        while (
+            self.current_tok.type in operands
+            or (self.current_tok.type, self.current_tok.value) in operands
+        ):
             op = self.current_tok
             res.register(self.advance())
             right = res.register(func())
-            if res.error: return res
+            if res.error:
+                return res
             left = BinOpNode(left, op, right)
 
         return res.success(left)
